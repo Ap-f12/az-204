@@ -1,1 +1,1 @@
-### az-204 practise
+### az-204 practice
