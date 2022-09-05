@@ -1,1 +1,1 @@
-### az-204 practice
+### az-204 practice code and labs
