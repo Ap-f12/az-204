@@ -1,0 +1,20 @@
+{
+  "tenantId": {
+    "value": "a2d0fada-1553-4f1e-832a-7329eb658f62"
+  },
+
+  "billingAccountName": {
+    "value": "956ca1bb-86d9-54db-b1e1-99be6cc28ca7:178ddb7d-a1b7-4b39-981a-73ed1939a169_2019-05-31"
+  },
+
+  "billingProfileName": {
+    "value": "5PMF-EWD3-BG7-PGB"
+  },
+  "invoiceSectionName": {
+    "value": "ZOVQ-Q7PC-PJA-PGB"
+  },
+
+  "subscriptionDisplayName": {
+    "value": "AZ204-exam"
+  }
+}

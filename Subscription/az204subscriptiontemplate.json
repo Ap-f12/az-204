@@ -1,0 +1,50 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "subscriptionAlias": {
+      "type": "string",
+      "metadata": {
+        "description": "The alias name of the subscription."
+      }
+    },
+    "subscriptionWorkload": {
+      "type": "string",
+      "allowedValues": ["Production", "DevTest"],
+      "metadata": {
+        "description": "The workload type of the subscription."
+      }
+    },
+
+    "billingScope": {
+      "type": "string",
+      "metadata": {
+        "description": "The billing scope of the subscription."
+      }
+    },
+    "location": {
+      "type": "string",
+
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    }
+  },
+  "resources": [
+    {
+      "scope": "/",
+      "name": "[parameters('subscriptionAlias')]",
+      "type": "Microsoft.Subscription/aliases",
+      "apiVersion": "2020-09-01",
+      "location": "[parameters('location')]",
+
+      "properties": {
+        "workload": "[parameters('subscriptionWorkload')]",
+        "displayName": "[parameters('subscriptionAlias')]",
+        "billingScope": "[parameters('billingScope')]"
+      }
+    }
+  ],
+
+  "outputs": {}
+}
