@@ -1,0 +1,40 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "name": {
+            "type": "string",
+            "defaultValue": "default-rg",
+            "metadata": {
+                "description": "Name of the Resource Group"
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "australiaeast",
+            "metadata": {
+                "description": "Location of the Resource Group"
+            }
+        },
+        "tags": {
+            "type": "object",
+            "defaultValue": {
+                "Environment": "Dev"
+            },
+            "metadata": {
+                "description": "Tags for the Resource Group"
+            }
+        }
+    },
+    "functions": [],
+    "variables": {},
+    "resources":[{
+        "name": "[parameters('name')]",
+        "type": "Microsoft.Resources/resourceGroups",
+        "apiVersion": "2022-09-01",
+        "location": "[parameters('location')]",
+       
+        "tags": "[parameters('tags')]"
+    }],
+    "outputs": {}
+}

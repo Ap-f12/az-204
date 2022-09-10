@@ -10,9 +10,9 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/VirtualMachine/AzWebAppSln/AzWebApp/bin/Debug/net6.0/AzWebApp.dll",
+            "program": "${workspaceFolder}/VirtualMachines/AzWebApplication/AzWebApplication/bin/Debug/net6.0/AzWebApplication.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/VirtualMachine/AzWebAppSln/AzWebApp",
+            "cwd": "${workspaceFolder}/VirtualMachines/AzWebApplication/AzWebApplication",
             "stopAtEntry": false,
             // Enable launching a web browser when ASP.NET Core starts. For more information: https://aka.ms/VSCode-CS-LaunchJson-WebBrowser
             "serverReadyAction": {

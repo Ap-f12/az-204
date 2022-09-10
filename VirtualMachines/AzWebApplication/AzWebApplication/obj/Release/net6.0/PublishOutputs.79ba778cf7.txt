@@ -1,0 +1,7 @@
+C:\Users\F12\source\repos\az-204\VirtualMachine\AzWebApplication\AzWebApplication\obj\Release\net6.0\PubTmp\Out\AzWebApplication.exe
+C:\Users\F12\source\repos\az-204\VirtualMachine\AzWebApplication\AzWebApplication\obj\Release\net6.0\PubTmp\Out\appsettings.Development.json
+C:\Users\F12\source\repos\az-204\VirtualMachine\AzWebApplication\AzWebApplication\obj\Release\net6.0\PubTmp\Out\appsettings.json
+C:\Users\F12\source\repos\az-204\VirtualMachine\AzWebApplication\AzWebApplication\obj\Release\net6.0\PubTmp\Out\AzWebApplication.dll
+C:\Users\F12\source\repos\az-204\VirtualMachine\AzWebApplication\AzWebApplication\obj\Release\net6.0\PubTmp\Out\AzWebApplication.deps.json
+C:\Users\F12\source\repos\az-204\VirtualMachine\AzWebApplication\AzWebApplication\obj\Release\net6.0\PubTmp\Out\AzWebApplication.runtimeconfig.json
+C:\Users\F12\source\repos\az-204\VirtualMachine\AzWebApplication\AzWebApplication\obj\Release\net6.0\PubTmp\Out\AzWebApplication.pdb
