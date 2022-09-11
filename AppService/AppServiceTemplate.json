@@ -1,0 +1,375 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "az204ProdSqlConnectionStringName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "The name of the connection string to use for the Azure SQL Database."
+      }
+    },
+    "az204ProdSqlConnectionString": {
+      "type": "string",
+      "metadata": {
+        "description": "The connection string for the Azure SQL Database"
+      }
+    },
+    "prodSqlServerUsername": {
+      "type": "string",
+      "defaultValue": "adminUsername",
+      "metadata": {
+        "description": "user name for prod sql server"
+      }
+    },
+    "prodSqlServerPassword": {
+      "type": "string",
+      "defaultValue": "adminPassword",
+      "metadata": {
+        "description": "password for prod sql server"
+      }
+    },
+    "stagingSqlServerUsername": {
+      "type": "string",
+      "defaultValue": "adminUsername",
+      "metadata": {
+        "description": "username for staging sql server"
+      }
+    },
+    "stagingSqlServerPassword": {
+      "type": "string",
+      "defaultValue": "adminPassword",
+      "metadata": {
+        "description": "password for staging sql server"
+      }
+    },
+    "repoUrl": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "The URL of the GitHub repository to deploy."
+      }
+    },
+    "adminEmail": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "email for admin"
+      }
+    }
+  },
+  "functions": [],
+  "variables": {},
+  "resources": [
+    {
+      "name": "az204AppServicePlan",
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2020-12-01",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "B1",
+        "tier": "Basic",
+        "capacity": 1
+      },
+      "tags": {
+        "displayName": "az204AppServicePlan"
+      },
+      "properties": {
+        "name": "az204AppServicePlan",
+        "reserved": false,
+        "zoneRedundant": false
+      }
+    },
+    {
+      "name": "az204SqlWebApp",
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2020-12-01",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/az204AppServicePlan')]": "Resource",
+        "displayName": "az204SqlWebApp"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', 'az204AppServicePlan')]"
+      ],
+      "properties": {
+        "name": "az204SqlWebApp",
+        "siteConfig": {
+          "connectionStrings": [
+            {
+              "name": "[parameters('az204ProdSqlConnectionStringName')]",
+              "connectionString": "[parameters('az204ProdSqlConnectionString')]",
+              "type": "SQLAzure"
+            }
+          ],
+          "metadata": [
+            {
+              "name": "CURRENT_STACK",
+              "value": "dotnet"
+            }
+          ],
+          "netFrameworkVersion": "v6.0"
+        },
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', 'az204AppServicePlan')]",
+        "resources": [
+          {
+            "type": "sourcecontrols",
+            "name": "web",
+            "apiVersion": "2020-12-01",
+            "properties": {
+              "RepoUrl": "[parameters('repoUrl')]",
+              "branch": "master",
+              "IsManualIntegration": false,
+              "deploymentRollbackEnabled": false,
+              "isMercurial": false,
+              "isGitHubAction": true,
+              "gitHubActionConfiguration": {
+                "generateWorkflowFile": true,
+                "workflowSettings": {
+                  "appType": "webapp",
+                  "publishType": "code",
+                  "os": "windows",
+                  "runtimeStack": "dotnet",
+                  "workflowApiVersion": "2020-12-01",
+                  "slotName": "production",
+                  "variables": {
+                    "runtimeVersion": "6.0.x"
+                  }
+                }
+              }
+            },
+            "dependsOn": [
+              "[resourceId('Microsoft.Web/Sites', 'az204SqlWebApp')]"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "az204Insights-az204AppServicePlan-AutoScaleSettings",
+      "type": "Microsoft.Insights/autoscalesettings",
+      "apiVersion": "2014-04-01",
+      "location": "East US",
+      "tags": {
+        "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/az204AppServicePlan')]": "Resource",
+        "displayName": "az204Insights AutoScale Settings for az204AppServicePlan"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', 'az204AppServicePlan')]"
+      ],
+      "properties": {
+        "name": "az204Insights-az204AppServicePlan-AutoScaleSettings",
+        "profiles": [
+          {
+            "name": "Default",
+            "capacity": {
+              "minimum": 1,
+              "maximum": 2,
+              "default": 1
+            },
+            "rules": [
+              {
+                "metricTrigger": {
+                  "metricName": "CpuPercentage",
+                  "metricResourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/az204AppServicePlan')]",
+                  "timeGrain": "PT1M",
+                  "statistic": "Average",
+                  "timeWindow": "PT10M",
+                  "timeAggregation": "Average",
+                  "operator": "GreaterThan",
+                  "threshold": 80
+                },
+                "scaleAction": {
+                  "direction": "Increase",
+                  "type": "ChangeCount",
+                  "value": 1,
+                  "cooldown": "PT10M"
+                }
+              },
+              {
+                "metricTrigger": {
+                  "metricName": "CpuPercentage",
+                  "metricResourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/az204AppServicePlan')]",
+                  "timeGrain": "PT1M",
+                  "statistic": "Average",
+                  "timeWindow": "PT1H",
+                  "timeAggregation": "Average",
+                  "operator": "LessThan",
+                  "threshold": 60
+                },
+                "scaleAction": {
+                  "direction": "Decrease",
+                  "type": "ChangeCount",
+                  "value": 1,
+                  "cooldown": "PT1H"
+                }
+              }
+            ]
+          }
+        ],
+        "enabled": true,
+        "targetResourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/az204AppServicePlan')]"
+      }
+    },
+    {
+      "name": "az204Insights-CPUHigh-az204AppServicePlan",
+      "type": "Microsoft.Insights/alertrules",
+      "apiVersion": "2016-03-01",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/az204AppServicePlan')]": "Resource",
+        "displayName": "az204Insights CPUHigh rule for az204AppServicePlan"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', 'az204AppServicePlan')]"
+      ],
+      "properties": {
+        "name": "az204Insights-CPUHigh-az204AppServicePlan",
+        "description": "The average CPU is high across all the instances of az204AppServicePlan",
+        "isEnabled": false,
+        "condition": {
+          "odata.type": "Microsoft.Azure.Management.Insights.Models.ThresholdRuleCondition",
+          "dataSource": {
+            "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleMetricDataSource",
+            "resourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/az204AppServicePlan')]",
+            "metricName": "CpuPercentage"
+          },
+          "operator": "GreaterThan",
+          "threshold": 90,
+          "windowSize": "PT15M"
+        },
+        "action": {
+          "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleEmailAction",
+          "sendToServiceOwners": true,
+          "customEmails": ["[parameters('adminEmail')]"]
+        }
+      }
+    },
+
+    {
+      "name": "az204Insights-ServerErrors-az204SqlWebApp",
+      "type": "Microsoft.Insights/alertrules",
+      "apiVersion": "2016-03-01",
+      "location": "East US",
+      "tags": {
+        "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/az204SqlWebApp')]": "Resource",
+        "displayName": "az204Insights ServerErrors rule for az204SqlWebApp"
+      },
+      "dependsOn": ["[resourceId('Microsoft.Web/sites', 'az204SqlWebApp')]"],
+      "properties": {
+        "name": "az204Insights-ServerErrors-az204SqlWebApp",
+        "description": "az204SqlWebApp has some server errors, status code 5xx.",
+        "isEnabled": false,
+        "condition": {
+          "odata.type": "Microsoft.Azure.Management.Insights.Models.ThresholdRuleCondition",
+          "dataSource": {
+            "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleMetricDataSource",
+            "resourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/sites/az204SqlWebApp')]",
+            "metricName": "Http5xx"
+          },
+          "operator": "GreaterThan",
+          "threshold": 0,
+          "windowSize": "PT5M"
+        },
+        "action": {
+          "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleEmailAction",
+          "sendToServiceOwners": true,
+          "customEmails": ["[parameters('adminEmail')]"]
+        }
+      }
+    },
+
+    {
+      "name": "az204Insights",
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02",
+      "location": "Central US",
+      "kind": "web",
+      "tags": {
+        "displayName": "az204Insights Component for az204SqlWebApp"
+      },
+      "dependsOn": ["[resourceId('Microsoft.Web/sites', 'az204SqlWebApp')]"],
+      "properties": {
+        "applicationId": "az204SqlWebApp",
+        "application_Type": "web"
+      }
+    },
+    {
+      "name": "[toLower('az204SqlServerStaging')]",
+      "type": "Microsoft.Sql/servers",
+      "apiVersion": "2014-04-01",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "az204SqlServerStaging"
+      },
+      "properties": {
+        "administratorLogin": "[parameters('stagingSqlServerUsername')]",
+        "administratorLoginPassword": "[parameters('stagingSqlServerPassword')]"
+      },
+      "resources": [
+        {
+          "type": "firewallRules",
+          "apiVersion": "2014-04-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', 'az204SqlServerStaging')]"
+          ],
+          "location": "[resourceGroup().location]",
+          "name": "AllowAllWindowsAzureIps",
+          "properties": {
+            "startIpAddress": "0.0.0.0",
+            "endIpAddress": "0.0.0.0"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "[toLower('az204SqlServerProd')]",
+      "type": "Microsoft.Sql/servers",
+      "apiVersion": "2014-04-01",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "az204SqlServerProd"
+      },
+      "properties": {
+        "administratorLogin": "[parameters('prodSqlServerUsername')]",
+        "administratorLoginPassword": "[parameters('prodSqlServerPassword')]"
+      },
+      "resources": [
+        {
+          "type": "firewallRules",
+          "apiVersion": "2014-04-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', 'az204sqlserverprod')]"
+          ],
+          "location": "[resourceGroup().location]",
+          "name": "AllowAllWindowsAzureIps",
+          "properties": {
+            "startIpAddress": "0.0.0.0",
+            "endIpAddress": "0.0.0.0"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "az204sqlserverprod/sampleDb",
+      "type": "Microsoft.Sql/servers/databases",
+      "apiVersion": "2014-04-01",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "sampleDb"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Sql/servers', 'az204sqlserverprod')]"
+      ],
+      "properties": {
+        "collation": "SQL_Latin1_General_CP1_CI_AS",
+        "edition": "Basic",
+        "maxSizeBytes": "1073741824",
+        "requestedServiceObjectiveName": "Basic"
+      }
+    }
+  ],
+  "outputs": {}
+}

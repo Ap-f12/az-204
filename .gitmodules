@@ -1,0 +1,3 @@
+[submodule "AppService/Az204SqlWebApp"]
+	path = AppService/Az204SqlWebApp
+	url = git@github.com:Ap-f12/Az204SqlWebApp.git
