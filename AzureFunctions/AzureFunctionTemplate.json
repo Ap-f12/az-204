@@ -1,0 +1,199 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "rg-location": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Location of the resource group"
+      }
+    },
+    "appInsightsName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Name of the Application Insights resource"
+      }
+    },
+    "appServicePlanName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Name of the app service plan"
+      }
+    },
+    "storageAccountName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Name of the storage account"
+      }
+    },
+    "functionAppName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Name of the function"
+      }
+    },
+    "sqlServerName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Name of the SQL Server"
+      }
+    },
+    "sqlServerUserName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Name of the SQL Server"
+      }
+    },
+    "sqlServerPassword": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Password of the SQL Server"
+      }
+    }
+  },
+  "functions": [],
+  "variables": {},
+
+  "resources": [
+    {
+      "name": "[parameters('appServicePlanName')]",
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2020-12-01",
+      "location": "[parameters('rg-location')]",
+      "sku": {
+        "name": "B1",
+        "capacity": 1,
+        "tier": "Basic"
+      },
+      "tags": {
+        "displayName": "[parameters('appServicePlanName')]"
+      },
+      "properties": {
+        "name": "[parameters('appServicePlanName')]"
+      }
+    },
+    {
+      "apiVersion": "2020-02-02-preview",
+      "name": "az204FunctionAppInsights",
+      "type": "microsoft.insights/components",
+      "location": "[parameters('rg-location')]",
+      "tags": {},
+      "kind": "web",
+      "dependsOn": [],
+      "properties": {
+        "ApplicationId": "[parameters('appInsightsname')]",
+
+        "Application_Type": "web",
+        "WorkspaceResourceId": "/subscriptions/5bdf75d8-f6da-4be4-9233-91a895f01872/resourceGroups/DefaultResourceGroup-EAU/providers/Microsoft.OperationalInsights/workspaces/DefaultWorkspace-5bdf75d8-f6da-4be4-9233-91a895f01872-EAU"
+      }
+    },
+    {
+      "name": "[toLower(parameters('storageAccountName'))]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2021-04-01",
+      "tags": {
+        "displayName": "[parameters('storageAccountName')]"
+      },
+      "location": "[resourceGroup().location]",
+      "kind": "StorageV2",
+      "sku": {
+        "name": "Premium_LRS",
+        "tier": "Premium"
+      }
+    },
+    {
+      "name": "[toLower(parameters('sqlServerName'))]",
+      "type": "Microsoft.Sql/servers",
+      "apiVersion": "2014-04-01",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "[toLower(parameters('sqlServerName'))]"
+      },
+      "properties": {
+        "administratorLogin": "[parameters('sqlServerUsername')]",
+        "administratorLoginPassword": "[parameters('sqlServerPassword')]"
+      },
+      "resources": [
+        {
+          "type": "firewallRules",
+          "apiVersion": "2014-04-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]"
+          ],
+          "location": "[resourceGroup().location]",
+          "name": "AllowAllWindowsAzureIps",
+          "properties": {
+            "startIpAddress": "0.0.0.0",
+            "endIpAddress": "0.0.0.0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "az204functionsqlserver/sampleDb",
+      "type": "Microsoft.Sql/servers/databases",
+      "apiVersion": "2014-04-01",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "sampleDb"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Sql/servers', 'az204functionsqlserver')]"
+      ],
+      "properties": {
+        "collation": "SQL_Latin1_General_CP1_CI_AS",
+        "edition": "Basic",
+        "maxSizeBytes": "1073741824",
+        "requestedServiceObjectiveName": "Basic"
+      }
+    },
+    {
+      "name": "[toLower(parameters('functionAppName'))]",
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2020-12-01",
+      "location": "[parameters('rg-location')]",
+      "kind": "functionapp",
+      "dependsOn": ["microsoft.insights/components/az204FunctionAppInsights"],
+      "properties": {
+        "name": "[parameters('functionAppName')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~4"
+            },
+            {
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "dotnet"
+            },
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference('microsoft.insights/components/az204sqlfunctionapp', '2015-05-01').InstrumentationKey]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference('microsoft.insights/components/az204sqlfunctionapp', '2015-05-01').ConnectionString]"
+            },
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey=',listKeys(resourceId('5bdf75d8-f6da-4be4-9233-91a895f01872','az204FunctionApp-rg','Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+            }
+          ],
+          "cors": {
+            "allowedOrigins": ["https://portal.azure.com"]
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {}
+}
