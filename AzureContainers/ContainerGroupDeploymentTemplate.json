@@ -1,0 +1,96 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "mysqlrootpassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "MySQL root password"
+      }
+    },
+    "acrUserName": {
+      "type": "string",
+      "metadata": {
+        "description": "Userame of the Azure Container Registry"
+      }
+    },
+    "acrPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Password of the Azure Container Registry"
+      }
+    }
+  },
+  "functions": [],
+  "variables": {},
+  "resources": [
+    {
+      "name": "MySqlAppContainerGroup",
+      "type": "Microsoft.ContainerInstance/containerGroups",
+      "apiVersion": "2021-03-01",
+      "location": "australiaeast",
+      "properties": {
+        "containers": [
+          {
+            "name": "mysqlapp",
+            "properties": {
+              "image": "az204appcontainerreg.azurecr.io/mysqlapp:latest",
+              "ports": [
+                {
+                  "port": 80
+                }
+              ],
+              "resources": {
+                "requests": {
+                  "cpu": 1,
+                  "memoryInGB": 1.5
+                }
+              }
+            }
+          },
+          {
+            "name": "mysql",
+            "properties": {
+              "image": "az204appcontainerreg.azurecr.io/mysql:latest",
+              "ports": [
+                {
+                  "port": 3306
+                }
+              ],
+              "resources": {
+                "requests": {
+                  "cpu": 1,
+                  "memoryInGB": 1.5
+                }
+              },
+              "environmentVariables": [
+                {
+                  "name": "MYSQL_ROOT_PASSWORD",
+                  "value": "[parameters('mysqlRootPassword')]"
+                }
+              ]
+            }
+          }
+        ],
+        "osType": "Linux",
+        "ipAddress": {
+          "type": "Public",
+          "ports": [
+            {
+              "protocol": "TCP",
+              "port": 80
+            }
+          ]
+        },
+        "imageRegistryCredentials": [
+          {
+            "server": "az204appcontainerreg.azurecr.io",
+            "username": "[parameters('acrUsername')]",
+            "password": "[parameters('acrPassword')]"
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {}
+}

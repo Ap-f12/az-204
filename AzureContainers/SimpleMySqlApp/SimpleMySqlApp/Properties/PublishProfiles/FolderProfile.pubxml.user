@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+https://go.microsoft.com/fwlink/?LinkID=208121.
+-->
+<Project>
+  <PropertyGroup>
+    <_PublishTargetUrl>C:\Users\F12\source\repos\az-204\AzureContainers\SimpleMySqlApp\SimpleMySqlApp\bin\Release\net6.0\publish\</_PublishTargetUrl>
+    <History>True|2022-09-13T03:16:13.8368390Z;True|2022-09-13T12:28:23.9067335+12:00;True|2022-09-13T12:13:12.8282271+12:00;</History>
+    <LastFailureDetails />
+  </PropertyGroup>
+</Project>
