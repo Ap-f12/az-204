@@ -1,0 +1,74 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "keyVaultName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Name of the Key Vault"
+      }
+    },
+    "keyVaultSecret1Value": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Value of the Key Vault Secret 1"
+      }
+    },
+    "ObjectId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Object ID of the user or service principal"
+      }
+    }
+  },
+  "functions": [],
+  "variables": {},
+  "resources": [
+    {
+      "name": "[toLower(parameters('keyVaultName'))]",
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2019-09-01",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "[toLower(parameters('keyVaultName'))]"
+      },
+      "properties": {
+        "enabledForDeployment": true,
+        "enabledForTemplateDeployment": true,
+        "enabledForDiskEncryption": true,
+        "tenantId": "[subscription().tenantId]",
+        "accessPolicies": [
+          {
+            "tenantId": "[subscription().tenantId]",
+            "objectId": "[parameters('ObjectId')]",
+            "permissions": {
+              "keys": ["Get"],
+              "secrets": ["List", "Get", "Set"]
+            }
+          }
+        ],
+        "sku": {
+          "name": "standard",
+          "family": "A"
+        }
+      },
+      "resources": [
+        {
+          "type": "secrets",
+          "name": "keyVaultSecret1",
+          "apiVersion": "2016-10-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.KeyVault/vaults', toLower(parameters('keyVaultName')))]"
+          ],
+          "properties": {
+            "value": "[parameters('keyVaultSecret1Value')]"
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {}
+}
