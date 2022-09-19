@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "+Zt2ZXLxeeYnGTpjL4ifKrbSrgq4mmkHFzn//tOTtSA=",
+  "Source": "AzAuthWebApi",
+  "BasePath": "_content/AzAuthWebApi",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
