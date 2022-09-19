@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "emailAddress": {
+      "type": "string",
+      "metadata": {
+        "description": "Email address to send alerts to"
+      }
+    }
+  },
+  "functions": [],
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.Insights/actionGroups",
+      "apiVersion": "2021-09-01",
+      "name": "azActionGroup",
+      "location": "global",
+      "properties": {
+        "groupShortName": "az204",
+        "enabled": true,
+        "emailReceivers": [
+          {
+            "name": "emailReceiver",
+            "emailAddress": "[parameters('emailAddress')]"
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {}
+}
